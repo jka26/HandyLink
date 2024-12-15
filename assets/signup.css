@@ -1,0 +1,119 @@
+html, body {
+    margin-top: 0;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    padding-bottom: 0 30px 0 30px;
+    min-height: 800px;
+    font-family: Arial, sans-serif;
+    background-size: cover;
+    background-image: url("handywoman.jpg");
+}
+
+/* Login box container */
+.signup-box-container {
+    position: relative;
+    height: 150vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Login box styling */
+.signup-box {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    border: 2px solid #ccc;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    width:350px;
+    text-align: center;
+    margin-right: 50px;
+}
+
+/* Styling for <h1> inside the login box */
+.signup-box h1 {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+    color:#174f22;
+}
+
+/* Styling for <p> inside the login box */
+.signup-box p {
+    font-size: 13px;
+}
+
+/* Button styling */
+.signup-box button {
+    width: 70%;
+    background-color: #366741;
+    border: none;
+    border-radius: 20px;
+    font-size: 16px;
+    cursor: pointer;
+    color: white;
+    padding: 10px 0;
+}
+
+/* Button hover effect */
+.signup-box button:hover {
+    background-color: #76917c;
+}
+
+/* Styling for links */
+.signup-box a {
+    color: rgb(61, 28, 191);
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.signup-box a:hover {
+    text-decoration: underline;
+}
+
+/* Input styling */
+.signup-box input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+.phone-input-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.country-code {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background-color: #fff;
+    border-right: 1px solid #ddd;
+}
+
+.country-code img {
+    width: 20px;
+    height: auto;
+    margin-right: 5px;
+}
+
+.country-code span {
+    margin-right: 5px;
+    font-size: 16px;
+    color: #333;
+}
+
+.country-code select {
+    border: none;
+    background: none;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+    appearance: none; /* Removes default dropdown icon */
+}

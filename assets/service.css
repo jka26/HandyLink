@@ -1,0 +1,211 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+  }
+  
+  /* Header */
+  header {
+    background-color: #1e3932;
+    padding: 1rem 2rem;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  header h1 {
+    color: white;
+    margin: 0;
+  }
+
+  /*Add a black background color to the top navigation*/
+.topnav {
+    /*display:flex;*/
+    background-color: #fcf9f9;
+    overflow: hidden;
+    border: 1px solid #272626;
+}
+
+.topnav h1 {
+    float: left;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+    color:#174f22;
+}
+  
+  /*Style the links inside the navigation bar*/
+.topnav a {
+    float: right;
+    margin-top: 10px;
+    color: black;
+    text-align: center;
+    padding: 18px 20px;
+    text-decoration: none;
+    font-size: 17px;
+}
+  
+  /*Change the color of links on hover*/
+.topnav a:hover {
+    background-color: #11b085;
+    color: black;
+}
+
+.booking-container {
+    max-width: 1200px;
+    margin: 120px auto;
+    padding: 0 20px;
+    text-align: center;
+}
+
+.booking-container h1 {
+    font-size: 2.5rem;
+    color: #2b3940;
+    margin-bottom: 30px;
+}
+
+.search-container {
+    width: 100%;
+    max-width: 800px; /* Reduce this value */
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.search-box {
+    position: relative;
+    max-width: 600px; /* Add this to further control width */
+    margin: 0 auto;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 15px 40px; /* Adjust padding if needed */
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+}
+
+.search-box i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+}
+
+.quick-tasks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.task-button {
+    padding: 10px 20px;
+    border: 2px solid #0d7a5f;
+    border-radius: 25px;
+    background: white;
+    color: #0d7a5f;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.task-button:hover {
+    background: #0d7a5f;
+    color: white;
+}
+
+.task-button.secondary {
+    border-color: #666;
+    color: #666;
+}
+
+.task-button.secondary:hover {
+    background: #666;
+    color: white;
+}
+
+.search-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-top: 8px;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.search-instruction {
+    color: #666;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.projects-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.project-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.project-item:hover {
+    background-color: #f8f8f8;
+}
+
+.project-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.project-price {
+    text-align: right;
+}
+
+.avg-label {
+    color: #666;
+    font-size: 0.9em;
+    margin-right: 8px;
+}
+
+.price-range {
+    color: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .booking-container h1 {
+        font-size: 2rem;
+    }
+
+    .search-box input {
+        font-size: 1rem;
+        padding: 12px 40px;
+    }
+
+    .task-button {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+    }
+}
