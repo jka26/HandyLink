@@ -41,7 +41,7 @@
                             <option value="">Select service type...</option>
                             <option value="Home Cleaning">Home Cleaning</option>
                             <option value="General Mounting">Mounting</option>
-                            <option value="Minor Plumbing Repairs">Plumbing</option>
+                            <option value="Minor Plumbing Repairs">Plumbing Repairs</option>
                             <option value="Moving">Moving</option>
                             <option value="Electrical Help">Electrical</option>
                             <option value="Gardening">Gardening</option>

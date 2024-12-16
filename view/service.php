@@ -79,19 +79,19 @@
         </div><br>
 
         <div class="quick-tasks">
-            <button class="task-button">Furniture Assembly</button>
-            <button class="task-button">Moving</button>
-            <button class="task-button">Truck Assisted Help Moving</button>
+            <button class="task-button" onclick="window.location.href='helpers_list.php?category=Furniture Assembly'">Furniture Assembly</button>
+            <button class="task-button" onclick="window.location.href='helpers_list.php?category=Moving'">Moving</button>
+            <button class="task-button" onclick="window.location.href='helpers_list.php?category=Minor Plumbing Repairs'">Plumbing Repairs</button>
         </div>
 
         <div class="quick-tasks">
-            <button class="task-button">Electrical Help</button>
-            <button class="task-button">Gardening</button>
-            <button class="task-button">General Mounting</button>
+            <button class="task-button" onclick="window.location.href='helpers_list.php?category=Electrical Help'">Electrical Help</button>
+            <button class="task-button" onclick="window.location.href='helpers_list.php?category=Gardening'">Gardening</button>
+            <button class="task-button" onclick="window.location.href='helpers_list.php?category=General Mounting'">General Mounting</button>
         </div>
 
         <div class="quick-tasks">
-            <button class="task-button">Cleaning</button>
+            <button class="task-button" onclick="window.location.href='helpers_list.php?category=Home Cleaning'">Cleaning</button>
             <button class="task-button secondary">See More</button>
         </div>
     </div>

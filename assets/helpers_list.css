@@ -1,0 +1,188 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f8f9fa;
+}
+
+.topnav {
+    background-color: #1e3932;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.topnav h1 {
+    margin-right: auto;
+    color: white;
+}
+
+.topnav a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    margin-left: 1rem;
+}
+
+.main-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.header h2 {
+    color: #1e3932;
+    margin-bottom: 0.5rem;
+}
+
+.helpers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.helper-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.helper-photo {
+    height: 200px;
+    overflow: hidden;
+}
+
+.helper-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholder-photo {
+    width: 100%;
+    height: 100%;
+    background: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.placeholder-photo i {
+    font-size: 4rem;
+    color: #999;
+}
+
+.helper-info {
+    padding: 1.5rem;
+}
+
+.helper-info h3 {
+    color: #1e3932;
+    margin-bottom: 0.5rem;
+}
+
+.rating {
+    color: #ffc107;
+    margin-bottom: 1rem;
+}
+
+.rating span {
+    color: #666;
+    margin-left: 0.5rem;
+}
+
+.location, .phone {
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.location i, .phone i {
+    margin-right: 0.5rem;
+    color: #1e3932;
+}
+
+.availability {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.availability h4 {
+    color: #1e3932;
+    margin-bottom: 0.5rem;
+}
+
+.availability p {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.reviews-btn, .book-btn {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.reviews-btn {
+    background-color: #f8f9fa;
+    color: #1e3932;
+}
+
+.book-btn {
+    background-color: #1e3932;
+    color: white;
+}
+
+.no-helpers {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 8px;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .topnav {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .topnav h1 {
+        margin-bottom: 1rem;
+    }
+
+    .topnav a {
+        margin: 0.25rem 0;
+    }
+
+    .helpers-grid {
+        grid-template-columns: 1fr;
+    }
+}

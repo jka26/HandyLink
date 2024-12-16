@@ -193,6 +193,7 @@ try {
         <div class="logo">HandyLink</div>
         <ul>
             <li><a href="helper_dashboard.php">Dashboard</a></li>
+            <li><a href="#Cprofile">Create Your Profile</a></li>
             <li><a href="#tasks">Tasks</a></li>
             <li><a href="#earnings">Earnings</a></li>
             <li><a href="#profile">Profile</a></li>
