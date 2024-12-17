@@ -123,9 +123,26 @@
                     }
                 })
                 .catch(error => {
-                    console.error("An error occurred:", error);
-                    alert("An unexpected error occurred. Please try again.");
+                if (error instanceof SyntaxError) {
+                    // Handle JSON parsing errors
+                    console.error('JSON Parsing Error:', error);
+                    alert('There was a problem processing the server response. Please try again.');
+                } else if (error instanceof TypeError) {
+                    // Handle network errors
+                    console.error('Network Error:', error);
+                    alert('Unable to connect to the server. Please check your internet connection and try again.');
+                } else {
+                    // Handle other types of errors
+                    console.error('Registration Error:', error);
+                    alert('An unexpected error occurred during registration. Please try again later.');
+                }
+                // Log the full error for debugging
+                console.error('Full error details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
                 });
+            });
             }
         });
         </script>

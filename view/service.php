@@ -12,10 +12,9 @@
     <div class="topnav">
             <h1>Handylink</h1>
             <a href="../actions/logout.php">Logout</a>
-            <a href="#">Account</a>
+            <a href="account_dashboard.php">Account</a>
             <a href="#">My Tasks</a>
             <a href="service.php">Book a Task</a>
-            <a href="#">Get GH₵25</a>
     </div>
 
     <div class="booking-container">

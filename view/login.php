@@ -14,7 +14,7 @@
 		    <div class="login-box">
 			<h1>Handylink</h1>
 		    <p>New to Handylink?<a href="signup.php"> Sign up here </a></p>
-			<form id="loginForm" method="post" action="../actions/login_action.php">
+			<form id="loginForm" method="POST" action="../actions/login_action.php">
 		       
 		        <!-- Email Field -->
                 <div class="input-field">
@@ -31,7 +31,7 @@
                 <div class="input-field radio-group">
                     <label>I am a:</label><br>
                     <label>
-                        <input type="radio" name="user_type" value="client" required checked>
+                        <input type="radio" name="user_type" value="client">
                         Client
                     </label>
                     <label>
@@ -50,7 +50,6 @@
         </div>
 
         <script>
-    
             document.getElementById("loginForm").addEventListener("submit", function(event) {
               event.preventDefault(); // Prevent form submission
                     

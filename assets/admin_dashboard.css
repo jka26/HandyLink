@@ -23,6 +23,7 @@ nav {
     top: 0;
     z-index: 1000;
     color: white;
+    height: 60px; /* Add fixed height */
 }
 
 nav .logo {
@@ -56,19 +57,84 @@ nav ul li a.active {
 
 /* Main Content */
 main {
-    margin-top: 80px;
+    margin-top: 80px;  /* Increase this if nav is taller */
     padding: 2rem;
     max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
 }
 
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Ensure table content is scrollable */
+.user-list {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow-x: auto; /* Add horizontal scroll if needed */
+    width: 100%;
+}
+
+/* Make table headers stick to top during scroll */
+thead {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+}
+
+/* Add container padding */
+section {
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Adjust quick stats cards */
+
+
+/* Ensure content doesn't overflow */
+.stat-card, 
+.user-list,
+#system-activity {
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Add responsive container width */
+@media (max-width: 1200px) {
+    main {
+        width: 95%;
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    nav {
+        height: auto;
+        padding: 1rem;
+    }
+
+    main {
+        margin-top: 120px; /* Increase for mobile nav height */
+    }
+
+    .user-menu {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
 /* Quick Stats */
 #quick-stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
+    width: 100%;
 }
 
 .stat-card {
@@ -305,6 +371,10 @@ tr:hover {
 .form-group textarea {
     height: 120px;
     resize: vertical;
+}
+
+.hidden {
+    display: none;
 }
 
 /* Responsive Design */

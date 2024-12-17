@@ -1,6 +1,9 @@
 <?php
-require_once '../includes/admin_auth.php';
+//require_once '../includes/admin_auth.php';
+session_start();
 require_once '../db/config.php';
+
+
 //requireAdminAuth();
 
 // Fetch statistics
@@ -17,16 +20,45 @@ try {
     $stats = $stmt->get_result()->fetch_assoc();
 
     // Recent users
+    // Modify your recent users query to include the status field
+    if ($selected_tab === 'all') {
     $stmt = $conn->prepare("
-        (SELECT 'client' as type, client_id as user_id, first_name, last_name, email, created_at 
-         FROM clients 
-         ORDER BY created_at DESC LIMIT 5)
-        UNION ALL
-        (SELECT 'helper' as type, helper_id as user_id, first_name, last_name, email, created_at 
-         FROM helpers 
-         ORDER BY created_at DESC LIMIT 5)
-        ORDER BY created_at DESC LIMIT 10
+    (SELECT 'client' as type, 
+            client_id as user_id, 
+            first_name, 
+            last_name, 
+            email, 
+            created_at, 
+            COALESCE(status, 'active') as status  /* Add default status */
+    FROM clients 
+    ORDER BY created_at DESC LIMIT 5)
+    UNION ALL
+    (SELECT 'helper' as type, 
+            helper_id as user_id, 
+            first_name, 
+            last_name, 
+            email, 
+            created_at,
+            COALESCE(status, 'active') as status  /* Add default status */
+    FROM helpers 
+    ORDER BY created_at DESC LIMIT 5)
+    ORDER BY created_at DESC LIMIT 10
     ");
+
+    } elseif ($selected_tab === 'blocked') {
+        $stmt = $conn->prepare("
+            (SELECT 'client' as type, client_id as user_id, first_name, last_name, email, created_at, status 
+             FROM clients 
+             WHERE status = 'blocked'
+             ORDER BY created_at DESC)
+            UNION ALL
+            (SELECT 'helper' as type, helper_id as user_id, first_name, last_name, email, created_at, status 
+             FROM helpers 
+             WHERE status = 'blocked'
+             ORDER BY created_at DESC)
+            ORDER BY created_at DESC
+        ");
+    }
     $stmt->execute();
     $recent_users = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -43,17 +75,15 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/admin_dashboard.css">
-    <!-- Add Chart.js -->
+    <link rel="icon" type="image/x-con" href="../assets/favicon.ico">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <nav>
         <div class="logo">HandyLink Admin</div>
         <ul>
-            <li><a href="#dashboard" class="active">Dashboard</a></li>
-            <li><a href="#users">Users</a></li>
-            <li><a href="#tasks">Tasks</a></li>
-            <li><a href="#reports">Reports</a></li>
+            <li><a href="admin_dashboard.php" class="active">Dashboard</a></li>
             <li><a href="#settings">Settings</a></li>
         </ul>
         <div class="user-menu">
@@ -95,8 +125,8 @@ try {
 
             <div class="tabs">
                 <button class="tab-btn active" onclick="showTab('all')">All Users</button>
-                <button class="tab-btn" onclick="showTab('clients')">Clients</button>
-                <button class="tab-btn" onclick="showTab('helpers')">Helpers</button>
+                <!-- <button class="tab-btn" onclick="showTab('clients')">Clients</button>
+                <button class="tab-btn" onclick="showTab('helpers')">Helpers</button> -->
                 <button class="tab-btn" onclick="showTab('blocked')">Blocked</button>
             </div>
 
@@ -119,11 +149,14 @@ try {
                             <td><?php echo htmlspecialchars($user['email']); ?></td>
                             <td><?php echo ucfirst($user['type']); ?></td>
                             <td><?php echo date('M d, Y', strtotime($user['created_at'])); ?></td>
-                            <td><span class="status active">Active</span></td>
+                            <td><span class="status <?php echo $user['status']; ?>"><?php echo ucfirst($user['status']); ?></span></td>
                             <td class="actions">
-                                <button onclick="viewUser(<?php echo $user['user_id']; ?>)" class="view-btn">View</button>
-                                <button onclick="blockUser(<?php echo $user['user_id']; ?>)" class="block-btn">Block</button>
-                                <button onclick="notifyUser(<?php echo $user['user_id']; ?>)" class="notify-btn">Notify</button>
+                                <button onclick="blockUser(<?php echo $user['user_id']; ?>, '<?php echo $user['type']; ?>')" 
+                                        class="block-btn"
+                                        <?php echo $user['status'] === 'blocked' ? 'disabled' : ''; ?>>
+                                    Block
+                                </button>
+                                <!-- <button onclick="notifyUser(<?php echo $user['user_id']; ?>)" class="notify-btn">Notify</button> -->
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -194,7 +227,25 @@ try {
 
         // User Management Functions
         function showTab(type) {
-            // Implement tab switching logic
+            // Update active tab button
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Show/hide relevant rows
+            const rows = document.querySelectorAll('.user-list table tbody tr');
+            rows.forEach(row => {
+                if (type === 'all') {
+                    row.classList.remove('hidden');
+                } else if (type === 'blocked') {
+                    const status = row.querySelector('.status').textContent.toLowerCase();
+                    row.classList.toggle('hidden', status !== 'blocked');
+                } else {
+                    const userType = row.getAttribute('data-user-type');
+                    row.classList.toggle('hidden', userType !== type);
+                }
+            });
         }
 
         function viewUser(userId) {
@@ -214,21 +265,32 @@ try {
                 });
         }
 
-        function blockUser(userId) {
+        function blockUser(userId, userType) {
             if (confirm('Are you sure you want to block this user?')) {
                 fetch('../actions/block_user.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ user_id: userId })
+                    body: JSON.stringify({ 
+                        user_id: userId,
+                        user_type: userType
+                    })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Update UI to reflect blocked status
+                        // Show success message
+                        alert('User blocked successfully');
+                        // Refresh the page to update the list
                         location.reload();
+                    } else {
+                        alert(data.message || 'Error blocking user');
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error blocking user');
                 });
             }
         }

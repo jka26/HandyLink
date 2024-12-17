@@ -2,42 +2,21 @@
 session_start();
 include "../db/config.php";
 
-// Get category from URL parameter and trim any whitespace
-$category = isset($_GET['category']) ? trim($_GET['category']) : null;
-
-// Debug information
-echo "Category from URL: " . $category . "<br>";
+// Get category from URL parameter
+$category = isset($_GET['category']) ? $_GET['category'] : null;
 
 // Get helpers for the selected category
 $stmt = $conn->prepare("
     SELECT h.helper_id, h.first_name, h.last_name, h.phone_number, h.location, 
-           h.avg_rating, h.profile_photo, h.category
-    FROM helpers h
-    WHERE h.category = ?
+           h.avg_rating
+    FROM helpers h, helper_availability ha
+    WHERE category = ?
+    ORDER BY avg_rating DESC
 ");
 
 $stmt->bind_param("s", $category);
 $stmt->execute();
-$result = $stmt->get_result();
-
-// Debug the query
-echo "Number of rows returned: " . $result->num_rows . "<br>";
-
-// Fetch the results
-$helpers = $result->fetch_all(MYSQLI_ASSOC);
-
-// Show all categories in database
-$cat_query = $conn->query("SELECT DISTINCT category FROM helpers");
-echo "<br>Available categories in database:<br>";
-while($row = $cat_query->fetch_assoc()) {
-    echo "'" . $row['category'] . "'<br>"; // Added quotes to see any hidden spaces
-}
-
-// Debug helper data
-if (!empty($helpers)) {
-    echo "<br>First helper data:<br>";
-    print_r($helpers[0]);
-}
+$helpers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -61,6 +40,7 @@ if (!empty($helpers)) {
     </div>
 
     <div class="main-container">
+
         <div class="header">
             <h2>Available Helpers for <?php echo htmlspecialchars($category); ?></h2>
             <p><?php echo count($helpers); ?> helpers found</p>

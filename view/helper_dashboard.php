@@ -82,24 +82,85 @@ try {
     $stmt->execute();
     $upcoming_tasks = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-    // Weekly Earnings
-    $stmt = $conn->prepare("SELECT COALESCE(SUM(amount), 0) as weekly_earnings 
-                           FROM earnings 
-                           WHERE helper_id = ? 
-                           AND payment_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
+    // Weekly earnings data - last 7 days
+    $stmt = $conn->prepare("
+    SELECT DATE(payment_date) as date, SUM(amount) as daily_amount 
+    FROM earnings 
+    WHERE helper_id = ? 
+    AND payment_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    GROUP BY DATE(payment_date)
+    ORDER BY date ASC
+    ");
     $stmt->bind_param("i", $helper_id);
     $stmt->execute();
-    $weekly_earnings = $stmt->get_result()->fetch_assoc()['weekly_earnings'];
+    $weekly_data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-    // Monthly Earnings
-    $stmt = $conn->prepare("SELECT COALESCE(SUM(amount), 0) as monthly_earnings 
-                           FROM earnings 
-                           WHERE helper_id = ? 
-                           AND MONTH(payment_date) = MONTH(CURDATE())
-                           AND YEAR(payment_date) = YEAR(CURDATE())");
+    // Monthly earnings data - current month by week
+    $stmt = $conn->prepare("
+        SELECT 
+            CONCAT('Week ', FLOOR(DATEDIFF(payment_date, DATE_SUB(payment_date, INTERVAL DAYOFMONTH(payment_date)-1 DAY))/7) + 1) as week,
+            SUM(amount) as weekly_amount
+        FROM earnings 
+        WHERE helper_id = ? 
+        AND MONTH(payment_date) = MONTH(CURDATE())
+        AND YEAR(payment_date) = YEAR(CURDATE())
+        GROUP BY FLOOR(DATEDIFF(payment_date, DATE_SUB(payment_date, INTERVAL DAYOFMONTH(payment_date)-1 DAY))/7)
+        ORDER BY week ASC
+    ");
     $stmt->bind_param("i", $helper_id);
     $stmt->execute();
-    $monthly_earnings = $stmt->get_result()->fetch_assoc()['monthly_earnings'];
+    $monthly_data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    // Prepare data for JavaScript
+    $weekly_labels = [];
+    $weekly_amounts = [];
+    $current_date = new DateTime();
+
+    // Initialize arrays for the last 7 days
+    for ($i = 6; $i >= 0; $i--) {
+        $date = (new DateTime())->sub(new DateInterval("P{$i}D"));
+        $weekly_labels[] = $date->format('D');
+        $weekly_amounts[] = 0;
+    }
+
+    // Fill in actual data
+    foreach ($weekly_data as $data) {
+        $date = new DateTime($data['date']);
+        $index = 6 - $current_date->diff($date)->days;
+        if ($index >= 0 && $index < 7) {
+            $weekly_amounts[$index] = floatval($data['daily_amount']);
+        }
+    }
+
+    // Prepare monthly data
+    $monthly_labels = [];
+    $monthly_amounts = [];
+    $week_count = ceil(date('t') / 7); // Get number of weeks in current month
+
+    // Initialize arrays for all weeks in the month
+    for ($i = 1; $i <= $week_count; $i++) {
+        $monthly_labels[] = "Week $i";
+        $monthly_amounts[] = 0;
+    }
+
+    // Fill in actual monthly data
+    foreach ($monthly_data as $data) {
+        $week_num = intval(substr($data['week'], 5)) - 1; // Extract week number
+        if ($week_num < count($monthly_amounts)) {
+            $monthly_amounts[$week_num] = floatval($data['weekly_amount']);
+        }
+    }
+
+    // Convert data to JSON for JavaScript
+    $weekly_chart_data = json_encode([
+        'labels' => $weekly_labels,
+        'amounts' => $weekly_amounts
+    ]);
+
+    $monthly_chart_data = json_encode([
+        'labels' => $monthly_labels,
+        'amounts' => $monthly_amounts
+    ]);
 
     // Recent Payments
     $stmt = $conn->prepare("SELECT e.payment_date, t.title as task, 
@@ -168,6 +229,17 @@ try {
     $response_rate = 0;
     $weekly_earnings = 0;
     $monthly_earnings = 0;
+
+    $days = array();
+    $default_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    foreach ($default_days as $day) {
+        $days[] = array(
+            'day_of_week' => $day,
+            'start_time' => '09:00',
+            'end_time' => '17:00',
+            'is_available' => false
+        );
+    }
 }
 ?>
 
@@ -193,11 +265,8 @@ try {
         <div class="logo">HandyLink</div>
         <ul>
             <li><a href="helper_dashboard.php">Dashboard</a></li>
-            <li><a href="#Cprofile">Create Your Profile</a></li>
-            <li><a href="#tasks">Tasks</a></li>
-            <li><a href="#earnings">Earnings</a></li>
+            <li><a href="helper_profile.php">Create Your Profile</a></li>
             <li><a href="#profile">Profile</a></li>
-            <li><a href="#messages">Messages</a></li>
         </ul>
         <div class="user-menu">
             <span class="user-name"><?php echo 'Welcome! '.htmlspecialchars($helper_name); ?></span>
@@ -329,43 +398,53 @@ try {
         <section id="availability">
             <h2>Availability Settings</h2>
             <div class="calendar-container">
-            <div class="calendar-container">
                 <div id="calendar"></div>
-            </div>
             </div>
             <div class="working-hours">
                 <h3>Working Hours</h3>
-                <form id="working-hours-form">
-                    <?php foreach($days as $day): ?>
-                    <div class="day-schedule">
-                        <label>
-                            <input type="checkbox" name="working_days[]" 
-                                   value="<?php echo htmlspecialchars($day['day_of_week']); ?>"
-                                   <?php echo $day['is_available'] ? 'checked' : ''; ?>>
-                            <?php echo htmlspecialchars($day['day_of_week']); ?>
-                        </label>
-                        <select name="<?php echo $day['day_of_week']; ?>_start">
-                            <?php
-                            for ($hour = 0; $hour < 24; $hour++) {
-                                $time = sprintf("%02d:00", $hour);
-                                $selected = ($time === $day['start_time']) ? 'selected' : '';
-                                echo "<option value=\"{$time}\" {$selected}>{$time}</option>";
+                <form id="working-hours-form" method="POST" action="../actions/update_availability.php">
+                    <div class="availability-grid">
+                        <?php
+                        $weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                        foreach ($weekdays as $day):
+                            // Find the availability data for this day
+                            $day_data = null;
+                            foreach ($days as $availability) {
+                                if ($availability['day_of_week'] === $day) {
+                                    $day_data = $availability;
+                                    break;
+                                }
                             }
-                            ?>
-                        </select>
-                        to
-                        <select name="<?php echo $day['day_of_week']; ?>_end">
-                            <?php
-                            for ($hour = 0; $hour < 24; $hour++) {
-                                $time = sprintf("%02d:00", $hour);
-                                $selected = ($time === $day['end_time']) ? 'selected' : '';
-                                echo "<option value=\"{$time}\" {$selected}>{$time}</option>";
+                            
+                            // Set default values if no data found
+                            if (!$day_data) {
+                                $day_data = [
+                                    'day_of_week' => $day,
+                                    'start_time' => '09:00',
+                                    'end_time' => '17:00',
+                                    'is_available' => false
+                                ];
                             }
-                            ?>
-                        </select>
+                        ?>
+                        <div class="day-schedule">
+                            <div class="day-header">
+                                <input type="checkbox" name="available_days[]" value="<?php echo $day; ?>" 
+                                    <?php echo $day_data['is_available'] ? 'checked' : ''; ?>>
+                                <label><?php echo $day; ?></label>
+                            </div>
+                            <div class="time-slots">
+                                <input type="time" name="<?php echo strtolower($day); ?>_start" 
+                                    value="<?php echo $day_data['start_time']; ?>"
+                                    <?php echo !$day_data['is_available'] ? 'disabled' : ''; ?>>
+                                <span>to</span>
+                                <input type="time" name="<?php echo strtolower($day); ?>_end" 
+                                    value="<?php echo $day_data['end_time']; ?>"
+                                    <?php echo !$day_data['is_available'] ? 'disabled' : ''; ?>>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
-                    <button type="submit">Update Schedule</button>
+                    <button type="submit" class="submit-btn">Update Schedule</button>
                 </form>
             </div>
         </section>
@@ -374,6 +453,77 @@ try {
     <footer>
         <p>&copy; 2024 HandyLink. All rights reserved.</p>
     </footer>
+
+    <style>
+.availability-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.day-schedule {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.day-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.time-slots {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+input[type="time"] {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 130px;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: #1e3932;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 2rem;
+    transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+    background-color: #152a25;
+}
+
+.earnings-chart {
+    height: 200px;
+    margin-top: 1rem;
+}
+
+.earnings-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.earnings-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -474,27 +624,52 @@ try {
         });
 
         // Handle working hours form submission
-        document.getElementById('working-hours-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetch('../actions/update_availability.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification('Availability updated successfully!', 'success');
-                } else {
-                    showNotification(data.message || 'Error updating availability', 'error');
-                }
-            })
-            .catch(error => {
-                showNotification('Error updating availability', 'error');
-                console.error('Error:', error);
+        
+            // Handle checkbox changes
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const day = this.value.toLowerCase();
+                    const timeInputs = document.querySelectorAll(`input[name="${day}_start"], input[name="${day}_end"]`);
+                    timeInputs.forEach(input => {
+                        input.disabled = !this.checked;
+                    });
+                });
             });
-        });
+
+            // Handle form submission
+            document.getElementById('working-hours-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData();
+
+                // Get all days
+                const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                
+                // Add checked days to available_days array
+                const checkedDays = Array.from(document.querySelectorAll('input[name="available_days[]"]:checked')).map(input => input.value);
+                checkedDays.forEach(day => {
+                    formData.append('available_days[]', day);
+                    // Add the corresponding time values
+                    formData.append(`${day.toLowerCase()}_start`, document.querySelector(`input[name="${day.toLowerCase()}_start"]`).value);
+                    formData.append(`${day.toLowerCase()}_end`, document.querySelector(`input[name="${day.toLowerCase()}_end"]`).value);
+                });
+
+                fetch('../actions/update_availability.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Availability updated successfully!', 'success');
+                    } else {
+                        showNotification(data.message || 'Error updating availability', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error updating availability', 'error');
+                });
+            });
 
         // Notification function
         function showNotification(message, type = 'info') {
@@ -561,6 +736,98 @@ try {
                 }
             }
         }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Parse the PHP data
+        const weeklyData = <?php echo $weekly_chart_data; ?>;
+        const monthlyData = <?php echo $monthly_chart_data; ?>;
+
+        // Weekly Chart
+        const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+        new Chart(weeklyCtx, {
+            type: 'bar',
+            data: {
+                labels: weeklyData.labels,
+                datasets: [{
+                    label: 'Daily Earnings (GH₵)',
+                    data: weeklyData.amounts,
+                    backgroundColor: 'rgba(30, 57, 50, 0.7)',
+                    borderColor: 'rgba(30, 57, 50, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'GH₵' + value.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'GH₵' + context.raw.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Monthly Chart
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: monthlyData.labels,
+                datasets: [{
+                    label: 'Weekly Earnings (GH₵)',
+                    data: monthlyData.amounts,
+                    backgroundColor: 'rgba(30, 57, 50, 0.1)',
+                    borderColor: 'rgba(30, 57, 50, 1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'GH₵' + value.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'GH₵' + context.raw.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
     });
 
     // Add CSS for notifications and modal
